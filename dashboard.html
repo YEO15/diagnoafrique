@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DiagnoAfrique v2.0 — Tableau de Bord Central</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0f4f8;--white:#fff;--border:#dde4ed;
+  --text:#0f1923;--muted:#6b7f95;--light:#f7fafc;
+  --blue:#005aff;--blue-l:rgba(0,90,255,.08);
+  --green:#00b87a;--green-l:rgba(0,184,122,.1);
+  --red:#e5192a;--red-l:rgba(229,25,42,.08);
+  --warn:#ff8800;--warn-l:rgba(255,136,0,.1);
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --sh:0 2px 12px rgba(0,0,0,.06);--sh-lg:0 8px 32px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+/* HEADER */
+header{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--sh)}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:700}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),#0033cc);display:grid;place-items:center;font-size:18px;box-shadow:0 4px 12px rgba(0,90,255,.3)}
+.logo span{color:var(--blue)}
+.hright{display:flex;align-items:center;gap:10px}
+.live-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--green-l);border:1px solid rgba(0,184,122,.3);border-radius:999px;font-size:.7rem;font-weight:700;color:var(--green)}
+.live-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.srv-tag{font-family:var(--mono);font-size:.68rem;padding:5px 12px;border:1px solid var(--border);border-radius:8px;color:var(--muted);background:var(--light)}
+/* NAV */
+.nav-tabs{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:60px;z-index:100}
+.ntab{padding:12px 18px;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:7px}
+.ntab:hover{color:var(--text)}.ntab.on{color:var(--blue);border-color:var(--blue)}
+.tab-content{display:none}.tab-content.on{display:block}
+/* PAGE */
+.page{max-width:1380px;margin:0 auto;padding:24px 24px 80px}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:1000px){.stats-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;box-shadow:var(--sh);transition:transform .2s,box-shadow .2s}
+.stat:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+.stat-num{font-size:2.2rem;font-weight:800;line-height:1;margin-bottom:5px;font-family:var(--mono)}
+.stat-lbl{font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.c-blue{color:var(--blue)}.c-red{color:var(--red)}.c-green{color:var(--green)}.c-warn{color:var(--warn)}.c-muted{color:var(--muted)}
+/* GRID */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+@media(max-width:900px){.analytics-grid{grid-template-columns:1fr}}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+/* CARD */
+.card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--sh)}
+.card-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+/* MAP */
+.map-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,#e0f0fb,#c8dff5)}
+/* CHART */
+.chart-wrap{position:relative;height:220px}
+/* NODES */
+.nodes-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.node-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh)}
+.node-dot{width:9px;height:9px;border-radius:50%}
+.node-dot.online{background:var(--green);box-shadow:0 0 0 3px rgba(0,184,122,.2);animation:blink 2s infinite}
+.node-name{font-size:.8rem;font-weight:700}.node-count{font-size:.68rem;color:var(--muted);font-family:var(--mono)}
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filter-btn{padding:6px 14px;border-radius:999px;font-size:.72rem;font-weight:600;border:1px solid var(--border);background:var(--white);cursor:pointer;font-family:var(--font);color:var(--muted);transition:all .2s}
+.filter-btn:hover{border-color:var(--blue);color:var(--blue)}
+.filter-btn.active{background:var(--blue);color:white;border-color:var(--blue)}
+.search-wrap{flex:1;min-width:180px;position:relative}
+.search-wrap input{width:100%;padding:8px 14px 8px 36px;border:1px solid var(--border);border-radius:10px;font-family:var(--font);font-size:.82rem;color:var(--text);background:var(--white);outline:none;transition:border-color .2s,box-shadow .2s}
+.search-wrap input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,90,255,.1)}
+.search-wrap::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.8rem;pointer-events:none}
+/* TABLE */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--sh);margin-bottom:20px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+thead{background:var(--light)}
+th{padding:11px 14px;text-align:left;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:12px 14px;font-size:.82rem;border-top:1px solid var(--border)}
+tr{transition:background .15s}
+tr:hover td{background:var(--light)}
+.tr-alerte td{background:rgba(229,25,42,.025)}.tr-ok td{background:rgba(0,184,122,.018)}
+.node-tag{display:inline-block;padding:3px 9px;border-radius:6px;font-size:.63rem;font-weight:700;font-family:var(--mono);background:var(--blue-l);color:var(--blue);border:1px solid rgba(0,90,255,.15)}
+.result-txt{font-weight:700}.result-txt.alerte{color:var(--red)}.result-txt.ok{color:var(--green)}
+.risk-chip{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.risk-ÉLEVÉ{background:rgba(229,25,42,.1);color:var(--red)}.risk-MODÉRÉ{background:rgba(255,136,0,.1);color:var(--warn)}.risk-FAIBLE{background:rgba(0,184,122,.1);color:var(--green)}
+.sync-chip{font-size:.63rem;font-family:var(--mono);font-weight:600}.sync-chip.direct{color:var(--green)}.sync-chip.synced{color:var(--warn)}
+.empty-row td{text-align:center;padding:48px;color:var(--muted)}
+@keyframes newRow{from{background:rgba(0,90,255,.1)}to{background:transparent}}.new-row td{animation:newRow 2.5s ease}
+/* PDF */
+.pdf-btn{padding:4px 10px;border-radius:7px;font-size:.62rem;font-weight:700;border:1px solid var(--border);background:var(--light);cursor:pointer;font-family:var(--font);color:var(--muted);transition:all .15s;white-space:nowrap}
+.pdf-btn:hover{background:var(--red);color:white;border-color:var(--red)}
+/* SECTION */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);display:flex;align-items:center;gap:8px}
+.sync-info{font-size:.65rem;color:var(--muted);font-family:var(--mono)}
+#last-update,#last-update2{color:var(--blue)}
+/* INFECTION BAR */
+.infection-rate{background:var(--red-l);border:1px solid rgba(229,25,42,.2);border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ir-val{font-size:2rem;font-weight:800;color:var(--red);font-family:var(--mono);flex-shrink:0}
+.ir-bar{width:100%;height:8px;background:rgba(229,25,42,.15);border-radius:10px;overflow:hidden;margin-top:8px}
+.ir-fill{height:100%;background:linear-gradient(90deg,var(--warn),var(--red));border-radius:10px;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+/* ALERT FLASH */
+.alert-flash{position:fixed;top:70px;right:20px;z-index:999;background:var(--red);color:white;padding:14px 20px;border-radius:12px;font-size:.85rem;font-weight:700;box-shadow:var(--sh-lg);animation:slideIn .4s ease,fadeOut .5s ease 4.5s forwards;pointer-events:none}
+@keyframes slideIn{from{transform:translateX(120%)}to{transform:translateX(0)}}
+@keyframes fadeOut{to{opacity:0;transform:translateY(-10px)}}
+/* CITY INFO */
+.city-info-card{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:16px;padding:20px;box-shadow:var(--sh);margin-bottom:18px;display:none}
+/* MOBILE */
+@media(max-width:600px){header{padding:0 14px;height:54px}.logo-icon{width:30px;height:30px;font-size:15px}.logo{font-size:.9rem}.page{padding:14px 12px 80px}.srv-tag{display:none}.stat-num{font-size:1.7rem}.card{padding:14px}}
+</style>
+</head>
+<body>
+<div id="alert-container"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧬</div>
+    Diagno<span>Afrique</span>
+    <span style="color:var(--muted);font-weight:400;font-size:.85rem;margin-left:4px">— Serveur Central</span>
+  </div>
+  <div class="hright">
+    <div class="live-pill">LIVE</div>
+    <div class="srv-tag" id="server-info">PORT 5000</div>
+  </div>
+</header>
+
+<div class="nav-tabs">
+  <div class="ntab on" onclick="switchTab('dashboard')">📊 Dashboard</div>
+  <div class="ntab" onclick="switchTab('carte')">🗺️ Carte CI</div>
+  <div class="ntab" onclick="switchTab('graphiques')">📈 Graphiques</div>
+  <div class="ntab" onclick="switchTab('activite')">📋 Activité</div>
+</div>
+
+<!-- TAB DASHBOARD -->
+<div class="tab-content on" id="tab-dashboard">
+<div class="page">
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num c-blue" id="s-total">0</div><div class="stat-lbl">Total Diagnostics</div></div>
+    <div class="stat"><div class="stat-num c-red" id="s-alertes">0</div><div class="stat-lbl">Alertes Malaria</div></div>
+    <div class="stat"><div class="stat-num c-green" id="s-negatifs">0</div><div class="stat-lbl">Négatifs</div></div>
+    <div class="stat"><div class="stat-num c-warn" id="s-nodes">0</div><div class="stat-lbl">Clients Actifs</div></div>
+    <div class="stat"><div class="stat-num c-muted" id="s-taux">0%</div><div class="stat-lbl">Taux Infection</div></div>
+  </div>
+  <div class="infection-rate">
+    <div class="ir-val" id="ir-val">0%</div>
+    <div style="flex:1">
+      <strong>Taux d'infection détecté</strong> — Basé sur tous les diagnostics du réseau
+      <div class="ir-bar"><div class="ir-fill" id="ir-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="nodes-row" id="nodes-row"></div>
+  <div class="analytics-grid">
+    <div class="card">
+      <div class="card-title">🗺️ Zones actives — Côte d'Ivoire</div>
+      <div class="map-wrap">
+        <svg viewBox="0 0 400 380" style="width:100%;display:block">
+          <rect width="400" height="380" fill="#d4eaf7"/>
+          <path d="M80,60 L160,40 L240,50 L300,80 L330,140 L320,200 L290,260 L260,310 L220,345 L180,360 L140,350 L100,325 L70,280 L50,220 L40,160 L55,100 Z" fill="#c8e6b2" stroke="#98c47a" stroke-width="2"/>
+          <path d="M100,150 Q160,180 200,220 Q240,260 260,310" stroke="#88c4e8" stroke-width="2" fill="none" opacity=".6"/>
+          <circle cx="215" cy="295" r="12" fill="rgba(229,25,42,.2)"/><circle cx="215" cy="295" r="6" fill="#e5192a" stroke="white" stroke-width="2"/>
+          <text x="230" y="299" font-size="10" fill="#0f1923" font-family="DM Sans" font-weight="700">Abidjan</text>
+          <text x="230" y="312" font-size="9" fill="#6b7f95" font-family="DM Sans" id="mini-abidjan">0 diag</text>
+          <circle cx="195" cy="195" r="9" fill="rgba(255,136,0,.2)"/><circle cx="195" cy="195" r="5" fill="#ff8800" stroke="white" stroke-width="2"/>
+          <text x="208" y="199" font-size="9" fill="#0f1923" font-family="DM Sans" font-weight="700">Bouaké</text>
+          <text x="208" y="211" font-size="8" fill="#6b7f95" font-family="DM Sans" id="mini-bouake">0 diag</text>
+          <circle cx="155" cy="220" r="7" fill="rgba(0,90,255,.12)"/><circle cx="155" cy="220" r="4" fill="#005aff" stroke="white" stroke-width="1.5"/>
+          <text x="165" y="224" font-size="8" fill="#0f1923" font-family="DM Sans">Yamoussoukro</text>
+          <circle cx="90" cy="185" r="7" fill="rgba(0,184,122,.12)"/><circle cx="90" cy="185" r="4" fill="#00b87a" stroke="white" stroke-width="1.5"/>
+          <text x="100" y="189" font-size="8" fill="#0f1923" font-family="DM Sans">Man</text>
+          <circle cx="175" cy="105" r="7" fill="rgba(0,90,255,.12)"/><circle cx="175" cy="105" r="4" fill="#005aff" stroke="white" stroke-width="1.5"/>
+          <text x="185" y="109" font-size="8" fill="#0f1923" font-family="DM Sans">Korhogo</text>
+          <text x="280" y="355" text-anchor="middle" font-size="10" fill="#4a8ab5" font-style="italic" opacity=".8" font-family="DM Sans">Golfe de Guinée</text>
+        </svg>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--muted);font-weight:600"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>Zone critique</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--muted);font-weight:600"><div style="width:8px;height:8px;border-radius:50%;background:var(--warn)"></div>Vigilance</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--muted);font-weight:600"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>Normale</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Répartition Positif / Négatif</div>
+      <div class="chart-wrap"><canvas id="chartDonut"></canvas></div>
+    </div>
+  </div>
+  <div class="section-header">
+    <div class="section-title">⚡ Derniers diagnostics</div>
+    <div class="sync-info">Sync : <span id="last-update">—</span></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Statut</th><th>Heure</th><th>Patient</th><th>Résultat</th><th>Confiance</th><th>Risque</th><th>PDF</th></tr></thead>
+      <tbody id="mini-table"><tr class="empty-row"><td colspan="7">⏳ Chargement…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- TAB CARTE -->
+<div class="tab-content" id="tab-carte">
+<div class="page">
+  <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat"><div class="stat-num c-red" id="map-alertes">0</div><div class="stat-lbl">Cas Positifs</div></div>
+    <div class="stat"><div class="stat-num c-green" id="map-negatifs">0</div><div class="stat-lbl">Cas Négatifs</div></div>
+    <div class="stat"><div class="stat-num c-warn" id="map-zones">5</div><div class="stat-lbl">Zones Couvertes</div></div>
+    <div class="stat"><div class="stat-num c-blue" id="map-taux">0%</div><div class="stat-lbl">Taux Infection</div></div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">🗺️ Carte épidémiologique — Côte d'Ivoire</div>
+    <div class="map-wrap">
+      <svg viewBox="0 0 500 480" style="width:100%;display:block">
+        <defs>
+          <radialGradient id="seaGrad" cx="50%" cy="50%">
+            <stop offset="0%" stop-color="#b8d8f0"/><stop offset="100%" stop-color="#8fc3e8"/>
+          </radialGradient>
+        </defs>
+        <rect width="500" height="480" fill="url(#seaGrad)"/>
+        <path d="M100,75 L140,55 L185,48 L225,52 L268,60 L300,75 L330,100 L355,130 L370,165 L372,205 L360,245 L340,280 L315,315 L285,350 L255,378 L225,398 L195,410 L165,405 L138,390 L112,368 L88,338 L68,302 L52,262 L42,220 L40,178 L48,138 L65,105 Z" fill="#d4e8c2" stroke="#98c47a" stroke-width="2.5"/>
+        <ellipse id="zone-abidjan" cx="285" cy="370" rx="45" ry="32" fill="rgba(229,25,42,.25)" opacity=".8"/>
+        <ellipse id="zone-bouake"  cx="240" cy="235" rx="40" ry="32" fill="rgba(255,136,0,.2)" opacity=".8"/>
+        <ellipse id="zone-yam"     cx="190" cy="275" rx="35" ry="28" fill="rgba(0,90,255,.12)" opacity=".8"/>
+        <ellipse id="zone-man"     cx="105" cy="225" rx="32" ry="26" fill="rgba(0,184,122,.15)" opacity=".8"/>
+        <ellipse id="zone-korhogo" cx="218" cy="125" rx="36" ry="28" fill="rgba(0,90,255,.12)" opacity=".8"/>
+        <text x="250" y="142" text-anchor="middle" font-size="12" fill="#1a3a6e" font-family="DM Sans" font-weight="600" opacity=".7">Nord</text>
+        <text x="155" y="200" text-anchor="middle" font-size="11" fill="#1a3a6e" font-family="DM Sans" font-weight="600" opacity=".7">Ouest</text>
+        <text x="295" y="205" text-anchor="middle" font-size="11" fill="#1a3a6e" font-family="DM Sans" font-weight="600" opacity=".7">Centre</text>
+        <text x="200" y="310" text-anchor="middle" font-size="10" fill="#1a3a6e" font-family="DM Sans" font-weight="600" opacity=".7">Sud-Ouest</text>
+        <!-- Abidjan -->
+        <g style="cursor:pointer" onclick="showCityInfo('abidjan')">
+          <circle cx="285" cy="370" r="16" fill="rgba(229,25,42,.15)"/>
+          <circle cx="285" cy="370" r="9" fill="#e5192a" stroke="white" stroke-width="2.5"/>
+          <text x="302" y="374" font-size="12" fill="#0f1923" font-family="DM Sans" font-weight="700">Abidjan</text>
+          <text x="302" y="387" font-size="10" fill="#6b7f95" font-family="DM Sans" id="abidjan-count">0 cas</text>
+        </g>
+        <!-- Bouaké -->
+        <g style="cursor:pointer" onclick="showCityInfo('bouake')">
+          <circle cx="240" cy="235" r="13" fill="rgba(255,136,0,.15)"/>
+          <circle cx="240" cy="235" r="7" fill="#ff8800" stroke="white" stroke-width="2"/>
+          <text x="255" y="239" font-size="11" fill="#0f1923" font-family="DM Sans" font-weight="700">Bouaké</text>
+          <text x="255" y="251" font-size="9" fill="#6b7f95" font-family="DM Sans" id="bouake-count">0 cas</text>
+        </g>
+        <!-- Yamoussoukro -->
+        <g style="cursor:pointer" onclick="showCityInfo('yamoussoukro')">
+          <circle cx="190" cy="275" r="10" fill="rgba(0,90,255,.12)"/>
+          <circle cx="190" cy="275" r="6" fill="#005aff" stroke="white" stroke-width="2"/>
+          <text x="204" y="279" font-size="10" fill="#0f1923" font-family="DM Sans" font-weight="600">Yamoussoukro</text>
+          <text x="204" y="290" font-size="9" fill="#6b7f95" font-family="DM Sans" id="yam-count">0 cas</text>
+        </g>
+        <!-- Man -->
+        <g style="cursor:pointer" onclick="showCityInfo('man')">
+          <circle cx="105" cy="225" r="10" fill="rgba(0,184,122,.12)"/>
+          <circle cx="105" cy="225" r="6" fill="#00b87a" stroke="white" stroke-width="2"/>
+          <text x="118" y="229" font-size="10" fill="#0f1923" font-family="DM Sans" font-weight="600">Man</text>
+          <text x="118" y="240" font-size="9" fill="#6b7f95" font-family="DM Sans" id="man-count">0 cas</text>
+        </g>
+        <!-- Korhogo -->
+        <g style="cursor:pointer" onclick="showCityInfo('korhogo')">
+          <circle cx="218" cy="125" r="10" fill="rgba(0,90,255,.12)"/>
+          <circle cx="218" cy="125" r="6" fill="#005aff" stroke="white" stroke-width="2"/>
+          <text x="232" y="129" font-size="10" fill="#0f1923" font-family="DM Sans" font-weight="600">Korhogo</text>
+          <text x="232" y="140" font-size="9" fill="#6b7f95" font-family="DM Sans" id="korhogo-count">0 cas</text>
+        </g>
+        <text x="310" y="450" text-anchor="middle" font-size="11" fill="#4a8ab5" font-style="italic" opacity=".8" font-family="DM Sans">Golfe de Guinée</text>
+      </svg>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--muted);font-weight:600"><div style="width:9px;height:9px;border-radius:50%;background:var(--red)"></div>Zone critique</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--muted);font-weight:600"><div style="width:9px;height:9px;border-radius:50%;background:var(--warn)"></div>Vigilance</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--muted);font-weight:600"><div style="width:9px;height:9px;border-radius:50%;background:var(--blue)"></div>Surveillance</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--muted);font-weight:600"><div style="width:9px;height:9px;border-radius:50%;background:var(--green)"></div>Normale</div>
+    </div>
+  </div>
+  <div class="city-info-card" id="city-info-card">
+    <div class="card-title" id="city-info-title">Informations ville</div>
+    <div id="city-info-body"></div>
+  </div>
+</div>
+</div>
+
+<!-- TAB GRAPHIQUES -->
+<div class="tab-content" id="tab-graphiques">
+<div class="page">
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-title">📈 Évolution 7 derniers jours</div>
+      <div class="chart-wrap"><canvas id="chartLine"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🍩 Positifs vs Négatifs</div>
+      <div class="chart-wrap"><canvas id="chartDonut2"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⏰ Activité par heure</div>
+      <div class="chart-wrap"><canvas id="chartHour"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠️ Niveaux de risque</div>
+      <div class="chart-wrap"><canvas id="chartRisk"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 Statistiques par nœud / client</div>
+    <div class="table-wrap" style="margin-bottom:0;border-radius:10px">
+      <table>
+        <thead><tr><th>Nœud</th><th>Total</th><th>Positifs</th><th>Négatifs</th><th>Taux infection</th><th>Dernier diag.</th></tr></thead>
+        <tbody id="stats-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- TAB ACTIVITE -->
+<div class="tab-content" id="tab-activite">
+<div class="page">
+  <div class="toolbar">
+    <button class="filter-btn active" onclick="setFilter('tous',this)">Tous</button>
+    <button class="filter-btn" onclick="setFilter('ALERTE',this)">🔴 Alertes</button>
+    <button class="filter-btn" onclick="setFilter('OK',this)">✅ Négatifs</button>
+    <div class="search-wrap"><input type="text" id="search-input" placeholder="Patient, nœud, résultat…" oninput="renderTable()"></div>
+  </div>
+  <div class="section-header">
+    <div class="section-title">📋 Tous les diagnostics</div>
+    <div class="sync-info">Sync : <span id="last-update2">—</span></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Statut</th><th>Horodatage</th><th>Client</th><th>Patient</th><th>Mode</th><th>Résultat</th><th>Confiance</th><th>Risque</th><th>Sync</th><th>PDF</th></tr></thead>
+      <tbody id="main-table"><tr class="empty-row"><td colspan="10">⏳ Chargement…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<script>
+const API=window.location.origin;
+let allData=[],prevCount=0,newIds=new Set(),activeFilter='tous';
+const CITY_DATA={
+  abidjan:{nom:'Abidjan',cas:0,positifs:0,population:'5.6M',region:'Lagunes'},
+  bouake:{nom:'Bouaké',cas:0,positifs:0,population:'831K',region:'Vallée du Bandama'},
+  yamoussoukro:{nom:'Yamoussoukro',cas:0,positifs:0,population:'355K',region:'Lacs'},
+  man:{nom:'Man',cas:0,positifs:0,population:'185K',region:'Tonkpi'},
+  korhogo:{nom:'Korhogo',cas:0,positifs:0,population:'286K',region:'Poro'}
+};
+
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  const map={dashboard:'dashboard',carte:'carte',graphiques:'graph',activite:'activ'};
+  document.querySelectorAll('.ntab').forEach(t=>{
+    if(t.textContent.toLowerCase().includes(map[name]))t.classList.add('on');
+  });
+  if(name==='graphiques')setTimeout(renderCharts,80);
+}
+
+async function loadData(){
+  try{
+    const[hRes,sRes]=await Promise.all([fetch(`${API}/history`),fetch(`${API}/status`)]);
+    const hist=await hRes.json();
+    const newData=hist.diagnostics||hist||[];
+    const oldIds=new Set(allData.map(d=>d.id));
+    newIds=new Set(newData.filter(d=>!oldIds.has(d.id)).map(d=>d.id));
+    newData.filter(d=>newIds.has(d.id)&&d.status==='ALERTE').forEach(d=>{
+      showAlert('🚨 Cas Malaria — '+(d.patient||'Anonyme')+' ('+( d.source_node||'central')+')');
+    });
+    allData=newData;
+    updateStats();updateMap();renderMiniTable();renderTable();
+    const t=new Date().toLocaleTimeString('fr-FR');
+    document.getElementById('last-update').textContent=t;
+    document.getElementById('last-update2').textContent=t;
+  }catch(e){console.error(e)}
+}
+
+function updateStats(){
+  const alertes=allData.filter(d=>d.status==='ALERTE').length;
+  const taux=allData.length?Math.round(alertes/allData.length*100):0;
+  document.getElementById('s-total').textContent=allData.length;
+  document.getElementById('s-alertes').textContent=alertes;
+  document.getElementById('s-negatifs').textContent=allData.length-alertes;
+  document.getElementById('s-taux').textContent=taux+'%';
+  document.getElementById('ir-val').textContent=taux+'%';
+  document.getElementById('ir-fill').style.width=Math.min(taux,100)+'%';
+  document.getElementById('map-alertes').textContent=alertes;
+  document.getElementById('map-negatifs').textContent=allData.length-alertes;
+  document.getElementById('map-taux').textContent=taux+'%';
+  const nodeMap={};
+  allData.forEach(d=>{const n=d.source_node||'central';if(!nodeMap[n])nodeMap[n]=0;nodeMap[n]++;});
+  document.getElementById('s-nodes').textContent=Object.keys(nodeMap).length;
+  renderNodes(nodeMap);renderStatsTable(nodeMap);renderDonut(alertes,allData.length-alertes);
+}
+
+function renderNodes(nodeMap){
+  document.getElementById('nodes-row').innerHTML=Object.entries(nodeMap).map(([n,c])=>`
+    <div class="node-card"><div class="node-dot online"></div>
+    <div><div class="node-name">${n}</div><div class="node-count">${c} diag.</div></div></div>`).join('');
+}
+
+function updateMap(){
+  const cityKeys=['abidjan','bouake','yamoussoukro','man','korhogo'];
+  cityKeys.forEach(c=>{CITY_DATA[c].cas=0;CITY_DATA[c].positifs=0;});
+  allData.forEach((d,i)=>{
+    const node=(d.source_node||'').toLowerCase();
+    let city=cityKeys[i%cityKeys.length];
+    if(node.includes('abidjan')||node.includes('central'))city='abidjan';
+    else if(node.includes('bouake')||node.includes('node_1'))city='bouake';
+    CITY_DATA[city].cas++;
+    if(d.status==='ALERTE')CITY_DATA[city].positifs++;
+  });
+  document.getElementById('abidjan-count').textContent=CITY_DATA.abidjan.cas+' diag.';
+  document.getElementById('bouake-count').textContent=CITY_DATA.bouake.cas+' diag.';
+  document.getElementById('yam-count').textContent=CITY_DATA.yamoussoukro.cas+' diag.';
+  document.getElementById('man-count').textContent=CITY_DATA.man.cas+' diag.';
+  document.getElementById('korhogo-count').textContent=CITY_DATA.korhogo.cas+' diag.';
+  document.getElementById('mini-abidjan').textContent=CITY_DATA.abidjan.cas+' diag.';
+  document.getElementById('mini-bouake').textContent=CITY_DATA.bouake.cas+' diag.';
+  const zoneMap={abidjan:'zone-abidjan',bouake:'zone-bouake',yamoussoukro:'zone-yam',man:'zone-man',korhogo:'zone-korhogo'};
+  Object.entries(CITY_DATA).forEach(([key,data])=>{
+    const el=document.getElementById(zoneMap[key]);if(!el)return;
+    const t=data.cas>0?data.positifs/data.cas:0;
+    if(t>0.5)el.setAttribute('fill','rgba(229,25,42,.3)');
+    else if(t>0.2)el.setAttribute('fill','rgba(255,136,0,.25)');
+    else if(data.cas>0)el.setAttribute('fill','rgba(0,184,122,.2)');
+    else el.setAttribute('fill','rgba(0,90,255,.08)');
+  });
+}
+
+function showCityInfo(city){
+  const d=CITY_DATA[city];if(!d)return;
+  const taux=d.cas>0?Math.round(d.positifs/d.cas*100):0;
+  document.getElementById('city-info-card').style.display='block';
+  document.getElementById('city-info-title').textContent='📍 '+d.nom+' — '+d.region;
+  document.getElementById('city-info-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px">
+      <div style="background:var(--light);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--blue);font-family:var(--mono)">${d.cas}</div>
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;font-weight:700">Diagnostics</div></div>
+      <div style="background:var(--red-l);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--red);font-family:var(--mono)">${d.positifs}</div>
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;font-weight:700">Cas Positifs</div></div>
+      <div style="background:var(--green-l);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--green);font-family:var(--mono)">${taux}%</div>
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;font-weight:700">Taux Infection</div></div>
+    </div>
+    <div style="margin-top:10px;font-size:.8rem;color:var(--muted)">
+      Population : <strong style="color:var(--text)">${d.population}</strong> · Région : <strong style="color:var(--text)">${d.region}</strong></div>`;
+}
+
+function renderMiniTable(){
+  const recent=[...allData].reverse().slice(0,5);
+  if(!recent.length){document.getElementById('mini-table').innerHTML='<tr class="empty-row"><td colspan="7">Aucun diagnostic</td></tr>';return;}
+  document.getElementById('mini-table').innerHTML=recent.map(d=>{
+    const isAlert=d.status==='ALERTE';
+    const isNew=newIds.has(d.id);
+    const ts=(d.timestamp||'').replace('T',' ').substring(11,19);
+    const risk=d.risk_level||'—';
+    const rCls=['ÉLEVÉ','MODÉRÉ','FAIBLE'].includes(risk)?risk:'';
+    return`<tr class="${isNew?'new-row':isAlert?'tr-alerte':'tr-ok'}">
+      <td style="text-align:center">${isAlert?'🔴':'✅'}</td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${ts}</td>
+      <td style="font-weight:600">${d.patient||'Anonyme'}</td>
+      <td class="result-txt ${isAlert?'alerte':'ok'}">${d.diagnostic||'—'}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:var(--blue)">${d.confidence||d.confiance||'—'}</td>
+      <td>${rCls?`<span class="risk-chip risk-${rCls}">${risk}</span>`:risk}</td>
+      <td><button class="pdf-btn" onclick="exportPDF('${d.id||''}','${(d.patient||'Patient').replace(/'/g,"\\'")}','${d.diagnostic||''}','${d.confiance||d.confidence||''}')">📄 PDF</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function setFilter(f,btn){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderTable();
+}
+
+function renderTable(){
+  const search=(document.getElementById('search-input')?.value||'').toLowerCase();
+  let data=allData.filter(d=>{
+    if(activeFilter==='ALERTE')return d.status==='ALERTE';
+    if(activeFilter==='OK')return d.status==='OK';
+    return true;
+  }).filter(d=>{
+    if(!search)return true;
+    return[d.patient,d.source_node,d.diagnostic,d.risk_level].join(' ').toLowerCase().includes(search);
+  }).reverse();
+  if(!data.length){document.getElementById('main-table').innerHTML='<tr class="empty-row"><td colspan="10">Aucun résultat</td></tr>';return;}
+  document.getElementById('main-table').innerHTML=data.map(d=>{
+    const isAlert=d.status==='ALERTE';
+    const isNew=newIds.has(d.id);
+    const ts=(d.timestamp||'').replace('T',' ').substring(0,19);
+    const risk=d.risk_level||'—';
+    const rCls=['ÉLEVÉ','MODÉRÉ','FAIBLE'].includes(risk)?risk:'';
+    const sync=d.synced?'<span class="sync-chip direct">🟢 Direct</span>':'<span class="sync-chip synced">⏳ Sync</span>';
+    return`<tr class="${isNew?'new-row':isAlert?'tr-alerte':'tr-ok'}">
+      <td style="text-align:center">${isAlert?'🔴':'✅'}</td>
+      <td style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">${ts}</td>
+      <td><span class="node-tag">${d.source_node||'central'}</span></td>
+      <td style="font-weight:600">${d.patient||'Anonyme'}</td>
+      <td style="font-size:.72rem;font-weight:700;text-transform:uppercase">${d.mode||'—'}</td>
+      <td class="result-txt ${isAlert?'alerte':'ok'}">${d.diagnostic||'—'}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:var(--blue)">${d.confidence||d.confiance||'—'}</td>
+      <td>${rCls?`<span class="risk-chip risk-${rCls}">${risk}</span>`:risk}</td>
+      <td>${sync}</td>
+      <td><button class="pdf-btn" onclick="exportPDF('${d.id||''}','${(d.patient||'Patient').replace(/'/g,"\\'")}','${d.diagnostic||''}','${d.confiance||d.confidence||''}')">📄 PDF</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderStatsTable(nodeMap){
+  const el=document.getElementById('stats-table');if(!el)return;
+  const rows=Object.keys(nodeMap).map(node=>{
+    const diags=allData.filter(d=>(d.source_node||'central')===node);
+    const pos=diags.filter(d=>d.status==='ALERTE').length;
+    const taux=diags.length?Math.round(pos/diags.length*100):0;
+    const last=diags[diags.length-1];
+    const lastTs=last?(last.timestamp||'').replace('T',' ').substring(0,16):'—';
+    return`<tr>
+      <td><span class="node-tag">${node}</span></td>
+      <td style="font-family:var(--mono);font-weight:700">${diags.length}</td>
+      <td style="color:var(--red);font-weight:700">${pos}</td>
+      <td style="color:var(--green);font-weight:700">${diags.length-pos}</td>
+      <td><span class="risk-chip ${taux>50?'risk-ÉLEVÉ':taux>20?'risk-MODÉRÉ':'risk-FAIBLE'}">${taux}%</span></td>
+      <td style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">${lastTs}</td>
+    </tr>`;
+  });
+  el.innerHTML=rows.length?rows.join(''):'<tr class="empty-row"><td colspan="6">Aucun nœud</td></tr>';
+}
+
+let charts={};
+function renderCharts(){
+  const alertes=allData.filter(d=>d.status==='ALERTE').length;
+  const negatifs=allData.length-alertes;
+  // Donut 2
+  const ctx2=document.getElementById('chartDonut2')?.getContext('2d');
+  if(ctx2){charts.donut2?.destroy();charts.donut2=new Chart(ctx2,{type:'doughnut',data:{labels:['Positifs','Négatifs'],datasets:[{data:[alertes,negatifs],backgroundColor:['#e5192a','#00b87a'],borderWidth:3,borderColor:'#fff',hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:12},padding:16}}}}})}
+  // Line
+  const ctx3=document.getElementById('chartLine')?.getContext('2d');
+  if(ctx3){
+    const days=[],countByDay={};
+    for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const key=d.toISOString().substring(0,10);days.push(d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric'}));countByDay[key]={total:0,alertes:0};}
+    allData.forEach(d=>{const key=(d.timestamp||'').substring(0,10);if(countByDay[key]){countByDay[key].total++;if(d.status==='ALERTE')countByDay[key].alertes++;}});
+    const vals=Object.values(countByDay);
+    charts.line?.destroy();charts.line=new Chart(ctx3,{type:'line',data:{labels:days,datasets:[{label:'Total',data:vals.map(v=>v.total),borderColor:'#005aff',backgroundColor:'rgba(0,90,255,.08)',tension:.4,fill:true,pointRadius:5,pointBackgroundColor:'#005aff'},{label:'Positifs',data:vals.map(v=>v.alertes),borderColor:'#e5192a',backgroundColor:'rgba(229,25,42,.06)',tension:.4,fill:true,pointRadius:5,pointBackgroundColor:'#e5192a'}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}},x:{grid:{display:false}}},plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:11}}}}}});
+  }
+  // Hour
+  const ctx4=document.getElementById('chartHour')?.getContext('2d');
+  if(ctx4){const hourData=Array(24).fill(0);allData.forEach(d=>{const h=parseInt((d.timestamp||'').substring(11,13));if(!isNaN(h))hourData[h]++;});charts.hour?.destroy();charts.hour=new Chart(ctx4,{type:'bar',data:{labels:Array.from({length:24},(_,i)=>i+'h'),datasets:[{label:'Diagnostics',data:hourData,backgroundColor:'rgba(0,90,255,.7)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}},x:{grid:{display:false}}},plugins:{legend:{display:false}}}})}
+  // Risk
+  const ctx5=document.getElementById('chartRisk')?.getContext('2d');
+  if(ctx5){const rD={'ÉLEVÉ':0,'MODÉRÉ':0,'FAIBLE':0};allData.forEach(d=>{if(rD[d.risk_level]!==undefined)rD[d.risk_level]++;});charts.risk?.destroy();charts.risk=new Chart(ctx5,{type:'bar',data:{labels:['Risque Élevé','Modéré','Faible'],datasets:[{data:Object.values(rD),backgroundColor:['rgba(229,25,42,.8)','rgba(255,136,0,.8)','rgba(0,184,122,.8)'],borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',scales:{x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}},y:{grid:{display:false}}},plugins:{legend:{display:false}}}})}
+}
+
+function renderDonut(alertes,negatifs){
+  const ctx=document.getElementById('chartDonut')?.getContext('2d');
+  if(!ctx)return;charts.donut?.destroy();
+  charts.donut=new Chart(ctx,{type:'doughnut',data:{labels:['Positifs','Négatifs'],datasets:[{data:[alertes,negatifs],backgroundColor:['#e5192a','#00b87a'],borderWidth:3,borderColor:'#fff',hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:11},padding:12}}}}});
+}
+
+function exportPDF(id,patient,diagnostic,confidence){
+  const win=window.open('','_blank');
+  const date=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport — ${patient}</title>
+  <style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#0f1923;padding:0 20px}
+  .hdr{background:linear-gradient(135deg,#005aff,#0033cc);color:white;padding:28px 32px;border-radius:14px;margin-bottom:28px}
+  .logo{font-size:1.4rem;font-weight:800;margin-bottom:4px}.sub{font-size:.85rem;opacity:.8}
+  h2{color:#005aff;font-size:1.1rem;margin:20px 0 10px;border-bottom:2px solid #e8f0fe;padding-bottom:6px}
+  .field{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f4f8}
+  .label{color:#6b7f95;font-size:.85rem}.value{font-weight:700;font-size:.9rem}
+  .rbox{border-radius:12px;padding:18px 22px;margin:20px 0;text-align:center}
+  .rbox.pos{background:#fff1f2;border:2px solid #fecaca}.rbox.neg{background:#f0fdf4;border:2px solid #bbf7d0}
+  .rtitle{font-size:1.5rem;font-weight:800}.rtitle.pos{color:#e5192a}.rtitle.neg{color:#00b87a}
+  .foot{margin-top:40px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:.75rem;color:#94a3b8;text-align:center}
+  @media print{button{display:none}}</style></head><body>
+  <div class="hdr"><div class="logo">🧬 DiagnoAfrique</div><div class="sub">Plateforme de Diagnostic Médical Distribué — Côte d'Ivoire</div></div>
+  <h2>Informations Patient</h2>
+  <div class="field"><span class="label">Patient</span><span class="value">${patient}</span></div>
+  <div class="field"><span class="label">Référence</span><span class="value">${id||'—'}</span></div>
+  <div class="field"><span class="label">Date</span><span class="value">${date}</span></div>
+  <div class="field"><span class="label">Type d'analyse</span><span class="value">Détection Paludisme — Frottis Giemsa</span></div>
+  <h2>Résultat</h2>
+  <div class="rbox ${diagnostic&&diagnostic.includes('Malaria')?'pos':'neg'}">
+    <div class="rtitle ${diagnostic&&diagnostic.includes('Malaria')?'pos':'neg'}">${diagnostic||'—'}</div>
+    <div style="margin-top:8px;font-size:.95rem;color:#6b7f95">Confiance : <strong>${confidence||'—'}</strong></div>
+  </div>
+  <h2>Recommandations</h2>
+  <p style="font-size:.88rem;line-height:1.8;color:#475569">${diagnostic&&diagnostic.includes('Malaria')?'⚠️ Résultat positif. Consultation médicale immédiate requise. Traitement antipaludéen selon protocole national.':'✅ Aucun marqueur parasitaire détecté. Surveillance standard. En cas de symptômes persistants, répéter le test sous 48h.'}</p>
+  <div class="foot">DiagnoAfrique · ${new Date().toLocaleString('fr-FR')} · Confidentiel</div>
+  <br><button onclick="window.print()" style="padding:10px 20px;background:#005aff;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700">🖨️ Imprimer</button>
+  </body></html>`);win.document.close();
+}
+
+function showAlert(msg){
+  const div=document.createElement('div');div.className='alert-flash';div.textContent=msg;
+  document.getElementById('alert-container').appendChild(div);setTimeout(()=>div.remove(),5200);
+}
+
+loadData();
+setInterval(loadData,3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a1628">
+<title>DiagnoAfrique — Diagnostic Médical IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — DiagnoAfrique v2.0
+   Thème : Medical Dark — Précision & Confiance
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:        #060d1a;
+  --bg2:       #0a1628;
+  --bg3:       #0f1f38;
+  --surface:   #132040;
+  --surface2:  #1a2d52;
+  --border:    rgba(99,140,220,.18);
+  --border2:   rgba(99,140,220,.32);
+
+  --blue:      #3b82f6;
+  --blue2:     #60a5fa;
+  --teal:      #06b6d4;
+  --green:     #10b981;
+  --red:       #ef4444;
+  --amber:     #f59e0b;
+
+  --text:      #e2eaf7;
+  --text2:     #94afd4;
+  --text3:     #516890;
+
+  --font:      'Sora', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+
+  --sh:        0 4px 24px rgba(0,0,0,.4);
+  --sh-blue:   0 8px 32px rgba(59,130,246,.25);
+  --sh-green:  0 8px 32px rgba(16,185,129,.25);
+  --sh-red:    0 8px 32px rgba(239,68,68,.25);
+}
+
+* { box-sizing:border-box; margin:0; padding:0 }
+html { scroll-behavior:smooth }
+body {
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Grille de fond */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(59,130,246,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,.03) 1px, transparent 1px);
+  background-size:40px 40px;
+}
+
+/* ── TOPBAR ────────────────────────────────────────────────── */
+.topbar {
+  position:sticky; top:0; z-index:100;
+  height:60px;
+  background:rgba(6,13,26,.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 28px; gap:16px;
+}
+.logo {
+  display:flex; align-items:center; gap:10px;
+  font-size:1.1rem; font-weight:800;
+  background:linear-gradient(135deg,#3b82f6,#06b6d4);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.logo-ring {
+  width:36px; height:36px; border-radius:10px;
+  background:linear-gradient(135deg,#1d4ed8,#0e7490);
+  display:grid; place-items:center; font-size:16px;
+  flex-shrink:0; box-shadow:var(--sh-blue);
+}
+.tb-right { display:flex; align-items:center; gap:10px; margin-left:auto }
+.status-pill {
+  display:flex; align-items:center; gap:7px;
+  padding:5px 14px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:999px; font-size:.7rem; font-weight:600; color:var(--text2);
+  transition:all .3s;
+}
+.status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0 }
+.dot-online { background:var(--green); box-shadow:0 0 0 3px rgba(16,185,129,.2); animation:pulse 2s infinite }
+.dot-offline { background:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.2) }
+.dot-wait { background:var(--amber); animation:pulse .8s infinite }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.clock {
+  font-family:var(--mono); font-size:.72rem; color:var(--text3);
+  padding:5px 12px; background:var(--surface);
+  border:1px solid var(--border); border-radius:8px;
+}
+
+/* ── LAYOUT ────────────────────────────────────────────────── */
+.layout {
+  position:relative; z-index:1;
+  display:grid; grid-template-columns:360px 1fr 340px;
+  min-height:calc(100vh - 60px);
+  gap:0;
+}
+
+/* ── PANEL ─────────────────────────────────────────────────── */
+.panel-l {
+  border-right:1px solid var(--border);
+  padding:20px; display:flex; flex-direction:column; gap:16px;
+  overflow-y:auto; background:var(--bg2);
+}
+.panel-c {
+  display:flex; flex-direction:column;
+  background:var(--bg);
+}
+.panel-r {
+  border-left:1px solid var(--border);
+  background:var(--bg2);
+  display:flex; flex-direction:column;
+  overflow-y:auto;
+}
+
+/* ── CARD ──────────────────────────────────────────────────── */
+.card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+}
+.card-header {
+  padding:12px 16px;
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:8px;
+}
+.card-header-title {
+  font-size:.65rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.14em;
+  color:var(--text3);
+}
+.card-body { padding:14px }
+
+/* ── FORM FIELDS ───────────────────────────────────────────── */
+.field-label {
+  font-size:.6rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.1em;
+  color:var(--text3); margin-bottom:6px; display:block;
+}
+.field-input, .field-select {
+  width:100%;
+  background:var(--bg3);
+  border:1.5px solid var(--border);
+  border-radius:9px;
+  padding:9px 13px;
+  font-family:var(--font); font-size:.82rem;
+  color:var(--text); outline:none;
+  transition:border-color .2s, box-shadow .2s;
+  appearance:none;
+}
+.field-input:focus, .field-select:focus {
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
+}
+.field-input::placeholder { color:var(--text3) }
+.f2 { display:grid; grid-template-columns:1fr 1fr; gap:10px }
+.fg { display:flex; flex-direction:column; gap:10px }
+
+/* ── SERVER URL ─────────────────────────────────────────────── */
+.srv-row {
+  display:flex; gap:8px; align-items:flex-end;
+}
+.srv-row .field-input { flex:1 }
+.btn-test {
+  padding:9px 14px; white-space:nowrap;
+  background:var(--surface2); border:1.5px solid var(--border2);
+  border-radius:9px; font-family:var(--font);
+  font-size:.72rem; font-weight:600; color:var(--blue2);
+  cursor:pointer; transition:all .15s;
+}
+.btn-test:hover { background:var(--blue); color:white; border-color:var(--blue) }
+
+/* ── EXAM TYPE ──────────────────────────────────────────────── */
+.exam-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px }
+.exam-btn {
+  padding:10px 8px; border:1.5px solid var(--border);
+  border-radius:10px; background:var(--bg3);
+  text-align:center; cursor:pointer;
+  transition:all .15s; display:flex; flex-direction:column;
+  align-items:center; gap:4px;
+}
+.exam-btn .ei { font-size:1.4rem }
+.exam-btn .en { font-size:.62rem; font-weight:700; color:var(--text3) }
+.exam-btn:hover { border-color:var(--blue); background:var(--surface) }
+.exam-btn.on {
+  border-color:var(--teal); background:rgba(6,182,212,.1);
+  box-shadow:0 0 0 3px rgba(6,182,212,.1);
+}
+.exam-btn.on .en { color:var(--teal) }
+
+/* ── DROP ZONE ──────────────────────────────────────────────── */
+.dropzone {
+  border:2px dashed var(--border2);
+  border-radius:12px; padding:24px 16px;
+  text-align:center; cursor:pointer;
+  background:var(--bg3); transition:all .25s;
+  position:relative; overflow:hidden;
+}
+.dropzone input { position:absolute; inset:0; opacity:0; cursor:pointer }
+.dropzone:hover, .dropzone.over {
+  border-color:var(--teal); background:rgba(6,182,212,.07);
+}
+.dz-icon { font-size:2.4rem; margin-bottom:8px; display:block }
+.dz-title { font-size:.9rem; font-weight:700; color:var(--text2); margin-bottom:4px }
+.dz-hint { font-size:.7rem; color:var(--text3) }
+.dz-formats {
+  display:flex; justify-content:center; gap:6px; margin-top:10px;
+}
+.dz-fmt {
+  font-size:.6rem; font-weight:700; padding:2px 8px;
+  border-radius:5px; background:var(--surface2);
+  color:var(--blue2); border:1px solid var(--border);
+}
+
+/* ── SEND BUTTON ────────────────────────────────────────────── */
+.btn-send {
+  width:100%; padding:14px;
+  background:linear-gradient(135deg,#1d4ed8,#0891b2);
+  border:none; border-radius:12px;
+  font-family:var(--font); font-size:.95rem;
+  font-weight:700; color:white; cursor:pointer;
+  box-shadow:var(--sh-blue); transition:all .2s;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  position:relative; overflow:hidden;
+}
+.btn-send::after {
+  content:''; position:absolute; top:0; left:-100%;
+  width:100%; height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  transition:left .5s;
+}
+.btn-send:hover { transform:translateY(-1px); box-shadow:0 12px 28px rgba(59,130,246,.4) }
+.btn-send:hover::after { left:100% }
+.btn-send:disabled { opacity:.45; cursor:not-allowed; transform:none; box-shadow:none }
+
+/* ── VISUALISER CENTER ──────────────────────────────────────── */
+.vbar {
+  height:46px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center;
+  padding:0 18px; gap:8px;
+}
+.vbar-title { font-size:.8rem; font-weight:700; color:var(--text2); flex:1 }
+.vtab {
+  padding:5px 14px; border-radius:7px;
+  font-size:.72rem; font-weight:600;
+  color:var(--text3); cursor:pointer;
+  border:1px solid transparent; transition:all .15s;
+}
+.vtab:hover { color:var(--text); background:var(--surface); border-color:var(--border) }
+.vtab.on { color:var(--teal); background:rgba(6,182,212,.1); border-color:rgba(6,182,212,.3) }
+
+.vstage {
+  flex:1; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; min-height:380px;
+  background:radial-gradient(ellipse at center, #0d1e38 0%, var(--bg) 70%);
+}
+.vstage::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(6,182,212,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6,182,212,.03) 1px, transparent 1px);
+  background-size:32px 32px;
+}
+
+.idle-state {
+  display:flex; flex-direction:column;
+  align-items:center; gap:16px; text-align:center;
+  animation:riseIn .6s ease both; z-index:1;
+}
+.idle-ring {
+  width:110px; height:110px; border-radius:50%;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  display:flex; align-items:center;
+  justify-content:center; font-size:3.2rem;
+  box-shadow:0 0 40px rgba(6,182,212,.15);
+  position:relative;
+}
+.idle-ring::after {
+  content:''; position:absolute; inset:-12px;
+  border-radius:50%; border:1.5px dashed var(--border2);
+  animation:spin 20s linear infinite;
+}
+.idle-title { font-size:1rem; font-weight:700; color:var(--text2) }
+.idle-hint { font-size:.78rem; color:var(--text3); line-height:1.8 }
+
+.img-wrap {
+  display:none; position:relative;
+  align-items:center; justify-content:center;
+  width:100%; height:100%;
+}
+.img-wrap.show { display:flex }
+#mainImg {
+  max-width:85%; max-height:360px;
+  object-fit:contain; border-radius:10px;
+  box-shadow:0 12px 40px rgba(0,0,0,.6);
+  transition:filter .4s, transform .4s;
+}
+
+/* Scan FX */
+.scan-fx { position:absolute; inset:0; display:none; pointer-events:none }
+.scan-beam {
+  position:absolute; left:5%; right:5%; height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--teal),#60a5fa,var(--teal),transparent);
+  box-shadow:0 0 14px rgba(6,182,212,.7);
+  animation:beamDown 1.6s ease-in-out infinite;
+}
+.sc { position:absolute; width:18px; height:18px; border-color:var(--teal); border-style:solid }
+.sc.tl { top:10px; left:10px; border-width:2px 0 0 2px }
+.sc.tr { top:10px; right:10px; border-width:2px 2px 0 0 }
+.sc.bl { bottom:10px; left:10px; border-width:0 0 2px 2px }
+.sc.br { bottom:10px; right:10px; border-width:0 2px 2px 0 }
+
+/* Processing overlay */
+.proc-overlay {
+  position:absolute; inset:0; z-index:10;
+  background:rgba(6,13,26,.85); backdrop-filter:blur(10px);
+  display:none; align-items:center; justify-content:center;
+}
+.proc-card {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:18px; padding:32px 40px;
+  display:flex; flex-direction:column;
+  align-items:center; gap:18px; text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  min-width:260px;
+}
+.spin-ring {
+  width:60px; height:60px; position:relative;
+}
+.spin-ring svg { position:absolute; inset:0 }
+.spin-arc {
+  animation:spin 1.2s cubic-bezier(.4,0,.6,1) infinite;
+  transform-origin:30px 30px;
+}
+.spin-core {
+  position:absolute; inset:14px; border-radius:50%;
+  background:var(--bg3); border:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+}
+.proc-title { font-size:.95rem; font-weight:700; color:var(--text) }
+.proc-sub { font-size:.72rem; color:var(--text3); font-family:var(--mono) }
+
+.vfoot {
+  height:40px; background:var(--bg2);
+  border-top:1px solid var(--border);
+  display:flex; align-items:center;
+  padding:0 18px; gap:12px;
+}
+.vft { font-size:.7rem; color:var(--text3); flex:1; font-family:var(--mono) }
+.vft b { color:var(--text2) }
+.vfbtn {
+  font-size:.7rem; font-weight:600; color:var(--text3);
+  cursor:pointer; padding:3px 10px;
+  border:1px solid var(--border); border-radius:6px;
+  background:var(--surface); transition:all .15s;
+}
+.vfbtn:hover { color:var(--text); border-color:var(--border2) }
+
+/* ── RESULT PANEL ───────────────────────────────────────────── */
+.r-head {
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center;
+  justify-content:space-between; flex-shrink:0;
+}
+.r-head-title { font-size:.85rem; font-weight:700 }
+.badge {
+  font-size:.62rem; font-weight:700; padding:3px 11px;
+  border-radius:999px; border:1px solid; transition:all .3s;
+}
+.badge-wait  { border-color:var(--border2); color:var(--text3); background:var(--surface) }
+.badge-ok    { border-color:rgba(16,185,129,.4); color:var(--green); background:rgba(16,185,129,.1) }
+.badge-alert { border-color:rgba(239,68,68,.4); color:var(--red); background:rgba(239,68,68,.1) }
+.badge-run   { border-color:rgba(59,130,246,.4); color:var(--blue2); background:rgba(59,130,246,.1) }
+.badge-err   { border-color:rgba(239,68,68,.4); color:var(--red); background:rgba(239,68,68,.1) }
+
+.r-idle {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:40px 24px; gap:14px; text-align:center;
+}
+.r-idle-icon { font-size:2.8rem; opacity:.25 }
+.r-idle-txt { font-size:.78rem; color:var(--text3); line-height:2 }
+
+.r-body { display:none; flex-direction:column; padding:16px 18px 80px }
+.r-body.show { display:flex; animation:riseIn .4s ease both }
+
+/* Diagnostic card */
+.diag-card {
+  border-radius:14px; overflow:hidden;
+  margin-bottom:16px; border:1px solid var(--border);
+}
+.diag-hdr { padding:16px 18px 14px }
+.diag-hdr.normal   { background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05)) }
+.diag-hdr.warning  { background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05)) }
+.diag-hdr.critical { background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(239,68,68,.05)) }
+.diag-tag { font-size:.58rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text3); margin-bottom:8px }
+.diag-name { font-size:1rem; font-weight:800; color:var(--text); margin-bottom:10px }
+.diag-conf { display:flex; align-items:baseline; gap:4px; margin-bottom:6px }
+.conf-big { font-size:2.8rem; font-weight:900; line-height:1; font-family:var(--mono) }
+.conf-big.normal   { color:var(--green) }
+.conf-big.warning  { color:var(--amber) }
+.conf-big.critical { color:var(--red) }
+.conf-unit { font-size:1.2rem; font-weight:700; color:var(--text3) }
+.diag-body { padding:12px 18px; background:var(--bg3) }
+.diag-desc { font-size:.78rem; color:var(--text2); line-height:1.9 }
+
+/* Sections */
+.sec-title {
+  font-size:.6rem; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text3);
+  margin:16px 0 8px; display:flex; align-items:center; gap:8px;
+}
+.sec-title::after { content:''; flex:1; height:1px; background:var(--border) }
+
+/* Confidence bars */
+.cbar { background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:10px 13px; margin-bottom:6px }
+.cbar-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px }
+.cbar-name { font-size:.8rem; font-weight:600; color:var(--text2) }
+.cbar-pct { font-size:.8rem; font-weight:700; font-family:var(--mono); color:var(--text) }
+.cbar-track { height:5px; background:var(--bg3); border-radius:10px; overflow:hidden }
+.cbar-fill { height:100%; border-radius:10px; width:0; transition:width 1.2s cubic-bezier(.16,1,.3,1) }
+
+/* Meta cells */
+.meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px }
+.mc { background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:9px 12px }
+.mc-k { font-size:.58rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:3px }
+.mc-v { font-size:.82rem; font-weight:700; font-family:var(--mono); color:var(--text) }
+
+/* Reco box */
+.reco-box { border-radius:11px; border:1px solid rgba(245,158,11,.3); background:rgba(245,158,11,.07); padding:12px 16px }
+.reco-title { font-size:.78rem; font-weight:700; color:var(--amber); margin-bottom:8px; display:flex; align-items:center; gap:6px }
+.reco-text { font-size:.78rem; color:var(--text2); line-height:1.9 }
+
+/* Actions */
+.actions { display:flex; flex-direction:column; gap:8px }
+.action-btn {
+  width:100%; padding:11px 16px; border-radius:10px;
+  font-family:var(--font); font-size:.82rem; font-weight:700;
+  cursor:pointer; border:1.5px solid; transition:all .15s;
+  display:flex; align-items:center; gap:10px;
+}
+.ab-primary {
+  background:linear-gradient(135deg,#1d4ed8,#0891b2);
+  border-color:#3b82f6; color:white;
+  box-shadow:var(--sh-blue);
+}
+.ab-primary:hover { transform:translateY(-1px); box-shadow:0 12px 28px rgba(59,130,246,.4) }
+.ab-outline {
+  background:var(--surface); border-color:var(--border2); color:var(--text2);
+}
+.ab-outline:hover { background:var(--surface2); color:var(--text); border-color:var(--blue) }
+
+/* ── HISTORY BAR ────────────────────────────────────────────── */
+.hist-bar {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  background:rgba(10,22,40,.95); backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  padding:9px 28px; display:flex; align-items:center; gap:14px;
+  box-shadow:0 -4px 24px rgba(0,0,0,.4);
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+}
+.hist-bar.up { transform:translateY(0) }
+.hist-lbl {
+  font-size:.6rem; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text3); flex-shrink:0;
+}
+.hist-list { display:flex; gap:7px; flex:1; overflow-x:auto }
+.hist-item {
+  display:flex; align-items:center; gap:7px;
+  padding:5px 13px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:8px; cursor:pointer; flex-shrink:0;
+  font-size:.78rem; font-weight:500; color:var(--text2);
+  transition:all .15s; white-space:nowrap;
+}
+.hist-item:hover { border-color:var(--border2); color:var(--text) }
+.hist-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0 }
+.hist-meta { font-size:.65rem; color:var(--text3); font-family:var(--mono) }
+
+/* ── ANIMATIONS ─────────────────────────────────────────────── */
+@keyframes riseIn    { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes spin      { to{transform:rotate(360deg)} }
+@keyframes beamDown  { 0%{top:2%} 100%{top:96%} }
+@keyframes popIn     { 0%{opacity:0;transform:scale(.85)} 60%{transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
+
+/* ── OFFLINE BADGE ──────────────────────────────────────────── */
+.offline-notice {
+  position:fixed; top:70px; left:50%; transform:translateX(-50%);
+  z-index:300; padding:8px 20px;
+  background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.4);
+  border-radius:999px; font-size:.72rem; font-weight:700;
+  color:var(--amber); display:none; align-items:center; gap:7px;
+  animation:riseIn .4s ease;
+}
+.offline-notice.show { display:flex }
+
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media(max-width:1100px) {
+  .layout { grid-template-columns:320px 1fr }
+  .panel-r { display:none }
+}
+@media(max-width:700px) {
+  .layout { grid-template-columns:1fr }
+  .panel-l { border-right:none }
+  .topbar { padding:0 14px }
+}
+</style>
+</head>
+<body>
+
+<!-- OFFLINE NOTICE -->
+<div class="offline-notice" id="offlineNotice">
+  ⚡ Mode hors-ligne — Les diagnostics seront synchronisés dès reconnexion
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-ring">🧬</div>
+    DiagnoAfrique
+  </div>
+  <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
+  <span style="font-size:.75rem;color:var(--text3);font-weight:400">Client v2.0</span>
+  <div class="tb-right">
+    <div class="status-pill">
+      <div class="status-dot dot-offline" id="statusDot"></div>
+      <span id="statusTxt">Connexion…</span>
+    </div>
+    <div class="clock" id="clockEl">--:--:--</div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- ══ PANEL GAUCHE ══ -->
+  <aside class="panel-l">
+
+    <!-- Serveur -->
+    <div class="card">
+      <div class="card-header">
+        <span>🌐</span>
+        <span class="card-header-title">Serveur</span>
+        <div class="badge badge-wait" id="srvBadge" style="margin-left:auto">NON TESTÉ</div>
+      </div>
+      <div class="card-body fg">
+        <div>
+          <label class="field-label">URL du serveur</label>
+          <div class="srv-row">
+            <input id="srvUrl" class="field-input" value="http://192.168.1.61:5000/api/diagnose">
+            <button class="btn-test" onclick="testServer()">🔍 Tester</button>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Champ fichier</label>
+          <input id="fieldName" class="field-input" value="image" placeholder="image, file, upload…">
+        </div>
+      </div>
+    </div>
+
+    <!-- Patient -->
+    <div class="card">
+      <div class="card-header">
+        <span>🏥</span>
+        <span class="card-header-title">Dossier Patient</span>
+      </div>
+      <div class="card-body fg">
+        <div class="f2">
+          <div>
+            <label class="field-label">ID Patient</label>
+            <input id="fId" class="field-input" value="MED-2025-0001">
+          </div>
+          <div>
+            <label class="field-label">Âge</label>
+            <input id="fAge" class="field-input" type="number" value="35" min="0" max="120">
+          </div>
+        </div>
+        <div class="f2">
+          <div>
+            <label class="field-label">Prénom</label>
+            <input id="fPrenom" class="field-input" placeholder="Prénom">
+          </div>
+          <div>
+            <label class="field-label">Nom</label>
+            <input id="fNom" class="field-input" placeholder="Nom">
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Médecin traitant</label>
+          <input id="fDoc" class="field-input" placeholder="Dr. Nom Prénom">
+        </div>
+        <!-- GPS (optionnel) -->
+        <div class="f2">
+          <div>
+            <label class="field-label">Latitude (GPS)</label>
+            <input id="fLat" class="field-input" value="5.3484" placeholder="5.3484">
+          </div>
+          <div>
+            <label class="field-label">Longitude (GPS)</label>
+            <input id="fLng" class="field-input" value="-4.0169" placeholder="-4.0169">
+          </div>
+        </div>
+        <button class="btn-test" onclick="getGPS()" style="width:100%;justify-content:center">
+          📍 Récupérer ma position GPS
+        </button>
+      </div>
+    </div>
+
+    <!-- Image & Type examen -->
+    <div class="card">
+      <div class="card-header">
+        <span>🩻</span>
+        <span class="card-header-title">Image Médicale</span>
+      </div>
+      <div class="card-body fg">
+        <div class="dropzone" id="dz">
+          <input type="file" id="fileInput" accept="image/*">
+          <span class="dz-icon">🩸</span>
+          <div class="dz-title">Glisser le frottis ici</div>
+          <div class="dz-hint">ou cliquer pour sélectionner</div>
+          <div class="dz-formats">
+            <span class="dz-fmt">PNG</span>
+            <span class="dz-fmt">JPG</span>
+            <span class="dz-fmt">TIFF</span>
+          </div>
+        </div>
+        <div>
+          <label class="field-label" style="margin-bottom:8px">Type d'examen</label>
+          <div class="exam-grid">
+            <div class="exam-btn on" data-exam="paludisme" onclick="pickExam(this)">
+              <span class="ei">🦟</span><span class="en">Paludisme</span>
+            </div>
+            <div class="exam-btn" data-exam="typh" onclick="pickExam(this)">
+              <span class="ei">🌡️</span><span class="en">Typhoïde</span>
+            </div>
+            <div class="exam-btn" data-exam="anem" onclick="pickExam(this)">
+              <span class="ei">🩸</span><span class="en">Anémie</span>
+            </div>
+            <div class="exam-btn" data-exam="autre" onclick="pickExam(this)">
+              <span class="ei">🔬</span><span class="en">Autre</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Send -->
+    <div>
+      <button class="btn-send" id="sendBtn" onclick="sendImage()">
+        <span style="font-size:1.1rem">🚀</span> Lancer l'analyse IA
+      </button>
+      <div style="text-align:center;font-size:.65rem;color:var(--text3);margin-top:8px;line-height:1.8">
+        🔒 Données médicales protégées · RGPD conforme
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ══ PANEL CENTRE ══ -->
+  <main class="panel-c">
+    <div class="vbar">
+      <div class="vbar-title">Visualiseur d'imagerie</div>
+      <div class="vtab on" id="vtNorm" onclick="setView('norm')">Normal</div>
+      <div class="vtab" id="vtZoom" onclick="doZoom()">🔍 Zoom</div>
+    </div>
+    <div class="vstage" id="vstage">
+      <!-- Idle -->
+      <div class="idle-state" id="idleEl">
+        <div class="idle-ring">🩺</div>
+        <div class="idle-title">Aucune image chargée</div>
+        <div class="idle-hint">Configurez le serveur,<br>sélectionnez un frottis<br>et lancez l'analyse</div>
+      </div>
+      <!-- Image -->
+      <div class="img-wrap" id="imgWrap">
+        <img id="mainImg" src="" alt="Frottis sanguin">
+        <div class="scan-fx" id="scanFx">
+          <div class="scan-beam"></div>
+          <div class="sc tl"></div><div class="sc tr"></div>
+          <div class="sc bl"></div><div class="sc br"></div>
+        </div>
+      </div>
+      <!-- Processing -->
+      <div class="proc-overlay" id="procOverlay">
+        <div class="proc-card">
+          <div class="spin-ring">
+            <svg viewBox="0 0 60 60" width="60" height="60">
+              <circle cx="30" cy="30" r="24" stroke="rgba(99,140,220,.2)" stroke-width="3" fill="none"/>
+              <circle class="spin-arc" cx="30" cy="30" r="24"
+                stroke="url(#grad)" stroke-width="3" fill="none"
+                stroke-dasharray="28 120" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#3b82f6"/>
+                  <stop offset="100%" stop-color="#06b6d4"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="spin-core">🧬</div>
+          </div>
+          <div class="proc-title" id="procTitle">Analyse en cours…</div>
+          <div class="proc-sub" id="procSub">Détection granules Giemsa</div>
+        </div>
+      </div>
+    </div>
+    <div class="vfoot">
+      <div class="vft" id="vfTxt">Aucun fichier — En attente</div>
+      <div class="vfbtn" onclick="fullReset()">↺ Réinitialiser</div>
+    </div>
+  </main>
+
+  <!-- ══ PANEL DROIT ══ -->
+  <aside class="panel-r">
+    <div class="r-head">
+      <div class="r-head-title">Résultat</div>
+      <div class="badge badge-wait" id="resBadge">EN ATTENTE</div>
+    </div>
+
+    <!-- Idle state -->
+    <div class="r-idle" id="rIdle">
+      <div class="r-idle-icon">🧬</div>
+      <div class="r-idle-txt">
+        Chargez une image<br>et lancez l'analyse<br>pour voir le résultat.
+      </div>
+    </div>
+
+    <!-- Result body -->
+    <div class="r-body" id="rBody">
+      <div class="diag-card">
+        <div class="diag-hdr" id="diagHdr">
+          <div class="diag-tag">Diagnostic · IA Giemsa</div>
+          <div class="diag-name" id="diagName">—</div>
+          <div class="diag-conf">
+            <div class="conf-big" id="diagConf">—</div>
+            <div class="conf-unit" id="diagUnit"></div>
+          </div>
+        </div>
+        <div class="diag-body">
+          <div class="diag-desc" id="diagDesc">—</div>
+        </div>
+      </div>
+
+      <div class="sec-title">Distribution</div>
+      <div id="cbars"></div>
+
+      <div class="sec-title">Métadonnées</div>
+      <div class="meta-grid">
+        <div class="mc"><div class="mc-k">HTTP</div><div class="mc-v" id="mHttp">—</div></div>
+        <div class="mc"><div class="mc-k">Latence</div><div class="mc-v" id="mLat">—</div></div>
+        <div class="mc"><div class="mc-k">Nœud</div><div class="mc-v" id="mNode">—</div></div>
+        <div class="mc"><div class="mc-k">Mode</div><div class="mc-v" id="mMode">—</div></div>
+        <div class="mc"><div class="mc-k">Score IA</div><div class="mc-v" id="mScore">—</div></div>
+        <div class="mc"><div class="mc-k">Granules</div><div class="mc-v" id="mGran">—</div></div>
+      </div>
+
+      <div class="sec-title">Recommandations</div>
+      <div class="reco-box">
+        <div class="reco-title">💊 Conduite à tenir</div>
+        <div class="reco-text" id="recoTxt">—</div>
+      </div>
+
+      <div class="sec-title">Actions</div>
+      <div class="actions">
+        <button class="action-btn ab-primary" onclick="openPDF()">
+          <span>📄</span> Rapport PDF patient
+        </button>
+        <button class="action-btn ab-outline" onclick="fullReset()">
+          <span>↺</span> Nouvelle analyse
+        </button>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- HISTORY BAR -->
+<div class="hist-bar" id="histBar">
+  <div class="hist-lbl">Historique</div>
+  <div class="hist-list" id="histList"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
+<script>
+// ── State ────────────────────────────────────────────────────────
+let currentFile = null, b64 = null, hasImg = false;
+let diagCount = 0, latencies = [];
+let lastDiagId = null;
+let zoomed = false;
+
+// ── Clock ────────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clockEl').textContent =
+    new Date().toLocaleTimeString('fr-FR');
+}, 1000);
+
+// ── GPS ──────────────────────────────────────────────────────────
+function getGPS() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById('fLat').value = pos.coords.latitude.toFixed(6);
+    document.getElementById('fLng').value = pos.coords.longitude.toFixed(6);
+  });
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+function pickExam(el) {
+  document.querySelectorAll('.exam-btn').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function setStatus(state, txt) {
+  const dot = document.getElementById('statusDot');
+  const s   = document.getElementById('statusTxt');
+  dot.className = 'status-dot dot-' + state;
+  s.textContent = txt;
+}
+
+function setSrvBadge(state, txt) {
+  const b = document.getElementById('srvBadge');
+  b.className = 'badge badge-' + (state==='ok'?'ok':state==='err'?'err':'wait');
+  b.textContent = txt;
+}
+
+function setResBadge(cls, txt) {
+  const b = document.getElementById('resBadge');
+  b.className = 'badge badge-' + cls;
+  b.textContent = txt;
+}
+
+// ── Test serveur ─────────────────────────────────────────────────
+async function testServer() {
+  const url = document.getElementById('srvUrl').value.trim()
+    .replace('/api/diagnose','').replace('/predict','');
+  setSrvBadge('wait', 'TEST…');
+  setStatus('wait', 'Test en cours…');
+  try {
+    const r = await fetch(url + '/health', { signal: AbortSignal.timeout(3000) });
+    const data = await r.json();
+    setSrvBadge('ok', '✅ EN LIGNE');
+    setStatus('online', `Serveur ${data.node || ''} v${data.version || ''}`);
+  } catch(e) {
+    setSrvBadge('err', '❌ HORS LIGNE');
+    setStatus('offline', 'Serveur inaccessible');
+    document.getElementById('offlineNotice').classList.add('show');
+  }
+}
+
+// ── Ping auto toutes les 8s ──────────────────────────────────────
+setInterval(async () => {
+  const url = document.getElementById('srvUrl').value.trim()
+    .replace('/api/diagnose','').replace('/predict','');
+  try {
+    const r = await fetch(url + '/health', { signal: AbortSignal.timeout(2500) });
+    if (r.ok) {
+      setStatus('online', 'En ligne');
+      setSrvBadge('ok', '✅ EN LIGNE');
+      document.getElementById('offlineNotice').classList.remove('show');
+    }
+  } catch(e) {
+    setStatus('offline', 'Hors ligne');
+    document.getElementById('offlineNotice').classList.add('show');
+  }
+}, 8000);
+
+// ── File load ────────────────────────────────────────────────────
+const dz = document.getElementById('dz');
+const fi = document.getElementById('fileInput');
+
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over') });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('over');
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+fi.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]) });
+
+function loadFile(f) {
+  currentFile = f;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    b64 = ev.target.result.split(',')[1];
+    const img = document.getElementById('mainImg');
+    img.src = ev.target.result;
+    document.getElementById('idleEl').style.display = 'none';
+    document.getElementById('imgWrap').classList.add('show');
+    document.getElementById('vfTxt').innerHTML =
+      `<b>${f.name}</b> · ${(f.size/1024).toFixed(0)} KB · Prêt`;
+    hasImg = true;
+    resetResults();
+  };
+  reader.readAsDataURL(f);
+}
+
+// ── Send image ───────────────────────────────────────────────────
+async function sendImage() {
+  if (!hasImg) { alert('⚠️ Sélectionnez une image d\'abord'); return; }
+  await doSend();
+}
+
+async function doSend() {
+  const url        = document.getElementById('srvUrl').value.trim();
+  const fieldName  = document.getElementById('fieldName').value || 'image';
+  if (!url) { alert('⚠️ Renseignez l\'URL du serveur'); return; }
+
+  disableBtn(); showProc(); setResBadge('run', 'ANALYSE…');
+
+  const t0 = performance.now();
+
+  try {
+    const fd = new FormData();
+    fd.append(fieldName,         currentFile);
+    fd.append('patient_prenom',  document.getElementById('fPrenom').value);
+    fd.append('patient_nom',     document.getElementById('fNom').value);
+    fd.append('patient_id',      document.getElementById('fId').value);
+    fd.append('patient_age',     document.getElementById('fAge').value);
+    fd.append('doctor',          document.getElementById('fDoc').value);
+    fd.append('latitude',        document.getElementById('fLat').value);
+    fd.append('longitude',       document.getElementById('fLng').value);
+    fd.append('mode',            'paludisme');
+    fd.append('source_node',     'client_web');
+
+    const resp    = await fetch(url, { method: 'POST', body: fd });
+    const latency = Math.round(performance.now() - t0);
+    const json    = await resp.json();
+
+    if (!resp.ok) {
+      setResBadge('err', `HTTP ${resp.status}`);
+      hideProc(); enableBtn();
+      return;
+    }
+
+    showResult(json, latency, resp.status);
+
+  } catch(e) {
+    hideProc(); enableBtn();
+    setResBadge('err', 'ERREUR RÉSEAU');
+    document.getElementById('offlineNotice').classList.add('show');
+    console.error('Erreur:', e);
+  }
+}
+
+// ── Show result ──────────────────────────────────────────────────
+function showResult(json, latency, status) {
+  hideProc();
+
+  const infected   = json.details?.infected || json.status === 'ALERTE';
+  const confidence = parseFloat(json.confidence || 0);
+  const severity   = json.severity || (infected ? 'critical' : 'normal');
+  const diag       = json.diagnosis || json.diagnostic || '—';
+  const desc       = json.description || json.recommandation || '—';
+  const dist       = json.distribution || [];
+  const details    = json.details || {};
+
+  // Store diag id for PDF
+  lastDiagId = json.diag_id || null;
+
+  // Badge
+  if (infected) setResBadge('alert', '🔴 ALERTE');
+  else          setResBadge('ok',    '✅ NÉGATIF');
+
+  // Header card
+  document.getElementById('rIdle').style.display = 'none';
+  document.getElementById('rBody').classList.add('show');
+  document.getElementById('diagHdr').className =
+    'diag-hdr ' + (infected ? 'critical' : 'normal');
+  document.getElementById('diagName').textContent = diag;
+  document.getElementById('diagDesc').textContent = desc;
+
+  const ce = document.getElementById('diagConf');
+  ce.className = 'conf-big ' + severity;
+  document.getElementById('diagUnit').textContent = '%';
+  animCount(ce, confidence);
+
+  // Distribution bars
+  const cbars = document.getElementById('cbars');
+  cbars.innerHTML = '';
+  dist.forEach(d => {
+    const pct  = parseFloat(d.confidence || 0);
+    const name = d.class || '—';
+    const col  = name.toLowerCase().includes('malaria') || name.toLowerCase().includes('anomal')
+      ? (infected ? '#ef4444' : '#10b981') : '#64748b';
+    cbars.innerHTML += `
+      <div class="cbar">
+        <div class="cbar-hd">
+          <span class="cbar-name">${name}</span>
+          <span class="cbar-pct">${pct.toFixed(1)}%</span>
+        </div>
+        <div class="cbar-track">
+          <div class="cbar-fill" style="background:${col}" data-w="${pct}"></div>
+        </div>
+      </div>`;
+  });
+  setTimeout(() =>
+    document.querySelectorAll('.cbar-fill').forEach(f => f.style.width = f.dataset.w + '%'), 80);
+
+  // Meta
+  const score = details.infection_score ?? '—';
+  const gran  = details.purple_granules != null ? details.purple_granules.toFixed(1) + '%' : '—';
+  document.getElementById('mHttp').textContent  = status || '—';
+  document.getElementById('mHttp').style.color  = status < 300 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('mLat').textContent   = latency != null ? latency + 'ms' : '—';
+  document.getElementById('mLat').style.color   = latency < 200 ? 'var(--green)' : 'var(--amber)';
+  document.getElementById('mNode').textContent  = json.processed_by || json.routed_via || 'central';
+  document.getElementById('mMode').textContent  = json.mode_info || 'PALUDISME';
+  document.getElementById('mScore').textContent = score;
+  document.getElementById('mGran').textContent  = gran;
+
+  // Reco
+  document.getElementById('recoTxt').textContent = desc;
+
+  // Stats
+  diagCount++;
+  if (latency) latencies.push(latency);
+  addHistory(diag, confidence, severity, latency);
+  enableBtn();
+
+  // Scroll vers résultat sur mobile
+  document.getElementById('rBody').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function animCount(el, target) {
+  const dur = 1200, t0 = performance.now();
+  el.style.animation = 'popIn .4s ease both';
+  (function frame(now) {
+    const p = Math.min((now - t0) / dur, 1), e = 1 - Math.pow(1-p, 4);
+    el.textContent = (target * e).toFixed(1);
+    if (p < 1) requestAnimationFrame(frame);
+    else el.textContent = target.toFixed(1);
+  })(t0);
+}
+
+// ── History ──────────────────────────────────────────────────────
+function addHistory(diag, conf, sev, lat) {
+  const list = document.getElementById('histList');
+  const bar  = document.getElementById('histBar');
+  const col  = sev === 'critical' ? 'var(--red)' :
+               sev === 'warning'  ? 'var(--amber)' : 'var(--green)';
+  const name = diag.length > 20 ? diag.slice(0, 20) + '…' : diag;
+  list.innerHTML =
+    `<div class="hist-item">
+      <div class="hist-dot" style="background:${col}"></div>
+      <span>${name}</span>
+      <span class="hist-meta">${conf.toFixed(1)}%</span>
+      <span class="hist-meta">${lat}ms</span>
+    </div>` + list.innerHTML;
+  bar.classList.add('up');
+}
+
+// ── PDF ──────────────────────────────────────────────────────────
+function openPDF() {
+  if (!lastDiagId) { alert('Aucun diagnostic disponible'); return; }
+  const url = document.getElementById('srvUrl').value.trim()
+    .replace('/api/diagnose','').replace('/predict','');
+  window.open(`${url}/pdf/${lastDiagId}`, '_blank');
+}
+
+// ── View ─────────────────────────────────────────────────────────
+function setView(v) {
+  document.getElementById('vtNorm').classList.toggle('on', v === 'norm');
+}
+function doZoom() {
+  zoomed = !zoomed;
+  document.getElementById('mainImg').style.transform = zoomed ? 'scale(1.7)' : 'scale(1)';
+  document.getElementById('vtZoom').classList.toggle('on', zoomed);
+}
+
+// ── UI helpers ───────────────────────────────────────────────────
+function showProc() {
+  document.getElementById('procOverlay').style.display = 'flex';
+  document.getElementById('scanFx').style.display      = 'block';
+}
+function hideProc() {
+  document.getElementById('procOverlay').style.display = 'none';
+  document.getElementById('scanFx').style.display      = 'none';
+}
+function disableBtn() {
+  const b = document.getElementById('sendBtn');
+  b.disabled = true;
+  b.innerHTML = '<span style="font-size:1.1rem">⏳</span> Analyse en cours…';
+}
+function enableBtn() {
+  const b = document.getElementById('sendBtn');
+  b.disabled = false;
+  b.innerHTML = '<span style="font-size:1.1rem">🚀</span> Lancer l\'analyse IA';
+}
+
+function resetResults() {
+  document.getElementById('rIdle').style.display = 'flex';
+  document.getElementById('rBody').classList.remove('show');
+  setResBadge('wait', 'EN ATTENTE');
+}
+
+function fullReset() {
+  document.getElementById('mainImg').src = '';
+  document.getElementById('mainImg').style.transform = 'scale(1)';
+  document.getElementById('idleEl').style.display = 'flex';
+  document.getElementById('imgWrap').classList.remove('show');
+  document.getElementById('vfTxt').innerHTML = 'Aucun fichier — En attente';
+  document.getElementById('fileInput').value = '';
+  hasImg = false; b64 = null; currentFile = null; zoomed = false;
+  document.getElementById('vtZoom').classList.remove('on');
+  resetResults();
+}
+
+// ── Keyboard shortcuts ───────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') sendImage();
+  if (e.key === 'Escape') fullReset();
+  if (e.key === 'z' || e.key === 'Z') doZoom();
+});
+
+// ── Init ─────────────────────────────────────────────────────────
+testServer();
+</script>
+</body>
+</html>
