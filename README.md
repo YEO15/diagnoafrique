@@ -263,8 +263,8 @@ Sync          Background threads + automatic retry
 | Name | Role | Institution |
 |---|---|---|
 | **YEO Tanna Daouda** | Network Architecture & Security | ESATIC, Abidjan |
-| **Stéphane** | AI Development & Backend | ESATIC, Abidjan |
-| **Lath** | Edge Computing & Integration | ESATIC, Abidjan |
+| **GBAYORO Desiré Stéphane** | AI Development & Backend | ESATIC, Abidjan |
+| **LATH Apka Salomon** | Edge Computing & Integration | ESATIC, Abidjan |
 
 *Master 1 — Networks & Telecommunications — ESATIC, Treichville, Abidjan, Côte d'Ivoire*
 
